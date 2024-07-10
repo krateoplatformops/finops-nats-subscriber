@@ -56,8 +56,7 @@ func GetClientSet() (*kubernetes.Clientset, error) {
 	return clientset, nil
 }
 
-func CreateOptimizationCustomResource(p *OptimizationRequest, name string) error {
-	namespace := "finops" // TODO: make not hardcoded
+func CreateOptimizationCustomResource(p *OptimizationRequest, optName string, optNamespace string, secretName string, secretNamespace string) error {
 	clientset, err := GetClientSet()
 	if err != nil {
 		return err
@@ -73,9 +72,9 @@ func CreateOptimizationCustomResource(p *OptimizationRequest, name string) error
 	// Check if the ConfigManagerVM already exists
 	jsonData, _ := clientset.RESTClient().Get().
 		AbsPath("/apis/finops.krateo.io/v1").
-		Namespace(namespace).
+		Namespace(optNamespace).
 		Resource("configmanagervms").
-		Name(name).
+		Name(optName).
 		DoRaw(context.TODO())
 
 	var crdResponse prometheusExporterGeneric.Kind
@@ -88,16 +87,16 @@ func CreateOptimizationCustomResource(p *OptimizationRequest, name string) error
 				APIVersion: "finops.krateo.io/v1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: namespace,
+				Name:      optName,
+				Namespace: optNamespace,
 			},
 			Spec: operatorPackage.ConfigManagerVMSpec{
 				ResourceProvider: "azure",
 				ProviderSpecificResources: operatorPackage.ProviderSpecificResources{
 					AzureLogin: providers.Azure{
 						TokenRef: operatorExporterPackage.ObjectRef{
-							Name:      "azure-secret-token",
-							Namespace: "finops",
+							Name:      secretName,
+							Namespace: secretNamespace,
 						},
 						Path:          "/subscriptions/31a6f7f0-996a-490e-b431-25c3f54b08b5/resourcegroups/FinOps/providers/Microsoft.Compute/virtualMachines/poppy",
 						ResourceDelta: p.Optimization.ResourceDelta,
@@ -113,9 +112,9 @@ func CreateOptimizationCustomResource(p *OptimizationRequest, name string) error
 		// Create the object in the cluster
 		_, err := clientset.RESTClient().Post().
 			AbsPath("/apis/finops.krateo.io/v1").
-			Namespace(namespace).
+			Namespace(optNamespace).
 			Resource("configmanagervms").
-			Name(name).
+			Name(optName).
 			Body(jsonData).
 			DoRaw(context.TODO())
 

@@ -16,6 +16,10 @@ var (
 )
 
 func main() {
+	subTopic := os.Getenv("SUB_TOPIC")
+	optSecretName := os.Getenv("OPT_SECRET_NAME")
+	optSecretNamespace := os.Getenv("OPT_SECRET_NAMESPACE")
+	optNamespace := os.Getenv("OPT_NAMESPACE")
 
 	fmt.Println("Connecting to NATS server in:", os.Getenv("NATS_SERVICE_HOST")+":"+os.Getenv("NATS_SERVICE_PORT"))
 	nc, err := nats.Connect(os.Getenv("NATS_SERVICE_HOST") + ":" + os.Getenv("NATS_SERVICE_PORT"))
@@ -30,12 +34,12 @@ func main() {
 	}
 	defer c.Close()
 
-	fmt.Println("Subscribed to topic", "optimizations")
-	_, err = c.Subscribe("optimizations", func(p *utils.OptimizationRequest) {
+	fmt.Println("Subscribed to topic", subTopic)
+	_, err = c.Subscribe(subTopic, func(p *utils.OptimizationRequest) {
 		splits := strings.Split(p.ResourceId, "/")
-		name := splits[len(splits)-1] + "-opt"
-		fmt.Println("Received optimization, publishing CR object", name)
-		err := utils.CreateOptimizationCustomResource(p, name)
+		optName := splits[len(splits)-1] + "-opt"
+		fmt.Println("Received optimization, publishing CR object", optName)
+		err := utils.CreateOptimizationCustomResource(p, optName, optNamespace, optSecretName, optSecretNamespace)
 		utils.Fatal(err)
 	})
 	if err != nil {
