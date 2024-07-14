@@ -1,1 +1,2 @@
-# finops-nats-subscriber
+# FinOps NATS Subscriber
+This repository subscribes on the nats server topic specified in the environment variable `SUB_TOPIC`. It then receives Azure optimizations from [Krateo FinOps HTTP Rest Queue](https://github.com/krateoplatformops/finops-http-rest-queue). The received optimizations are compiled into a Custom Resource managed by the [Krateo FinOps Operator VM Manager](https://github.com/krateoplatformops/finops-operator-vm-manager).
